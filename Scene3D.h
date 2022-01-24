@@ -3,6 +3,8 @@
  * https://github.com/ctralie/ggslac
  * @author ctralie
  */
+#ifndef SCENE3D_H
+#define SCENE3D_H
 
 #include <vector>
 #include <map>
@@ -50,11 +52,11 @@ class Scene3D {
         string getMaterialsJSON() {
             stringstream json;
             json << "\"materials\":{\n";
-            int i = 0;
+            size_t i = 0;
             for (const pair<string, int>& c : colors) {
                 json << "\t\"color" << c.second << "\": {";
                 json << "\"kd\":[" << c.first << "]}";
-                if (i < colors.size() - 1) {
+                if (i+1 < colors.size()) {
                     json << ",";
                 }
                 json << "\n";
@@ -95,7 +97,7 @@ class Scene3D {
         string getCamerasJSON() {
             stringstream json;
             json << "\"cameras\":[\n";
-            for (int i = 0; i < cameras.size(); i++) {
+            for (size_t i = 0; i < cameras.size(); i++) {
                 double* c = cameras.at(i);
                 json << "{\n";
                 json << "\t\"pos\":[" << c[0] << ", " << c[1] << ", " << c[2] << "],\n";
@@ -104,7 +106,7 @@ class Scene3D {
                 double ch = cos(c[3]*PI/360);
                 json << "\t\"rot\": [0, " << sh << ", 0, " << ch << "]\n";
                 json << "}";
-                if (i < cameras.size() - 1) {
+                if (i+1 < cameras.size()) {
                     json << ",";
                 }
                 json << "\n";
@@ -118,12 +120,12 @@ class Scene3D {
          * in the scene
          * @return JSON string
          */
-        getShapesJSON() {
+        string getShapesJSON() {
             stringstream json;
             json << "\"children\":[\n";
-            for (int i = 0; i < shapesJSON.size(); i++) {
+            for (size_t i = 0; i < shapesJSON.size(); i++) {
                 json << shapesJSON.at(i);
-                if (i < shapesJSON.size() - 1) {
+                if (i+1 < shapesJSON.size()) {
                     json << ",";
                 }
                 json << "\n";
@@ -138,10 +140,10 @@ class Scene3D {
         Scene3D() {}
         ~Scene3D() {
             for (size_t i = 0; i < cameras.size(); i++) {
-                delete[] cameras.get(i);
+                delete[] cameras.at(i);
             }
             for (size_t i = 0; i < lights.size(); i++) {
-                delete[] lights.get(i);
+                delete[] lights.at(i);
             }
         }
         
@@ -255,7 +257,7 @@ class Scene3D {
                                 double height, double r, double g, double b,
                                 double rx, double ry, double rz,
                                 double sx, double sy, double sz) {
-            stringsteam cylinderJSON;
+            stringstream cylinderJSON;
             cylinderJSON << "{\"type\":\"cylinder\",\n";
             cylinderJSON << "\"radius\":" << radius << ",\n";
             cylinderJSON << "\"height\":" << height << ",\n";
@@ -300,7 +302,7 @@ class Scene3D {
                                 double height, double r, double g, double b,
                                 double rx, double ry, double rz,
                                 double sx, double sy, double sz) {
-            string coneJSON;
+            stringstream coneJSON;
             coneJSON << "{\"type\":\"cone\",\n";
             coneJSON << "\"radius\":" << radius << ",\n";
             coneJSON << "\"height\":" << height << ",\n";
@@ -343,7 +345,7 @@ class Scene3D {
                                 double radx, double rady, double radz,
                                 double r, double g, double b, 
                                 double rx, double ry, double rz) {
-            string ellipsoidJSON;
+            stringstream ellipsoidJSON;
             ellipsoidJSON << "{\"type\":\"sphere\",\n";
             ellipsoidJSON << "\"material\":\"" << getColorString(r, g, b) << "\"}";
             shapesJSON.push_back(getTransformationHierarchy(cx, cy, cz, rx, ry, rz, radx, rady, radz, ellipsoidJSON.str()));
@@ -399,12 +401,12 @@ class Scene3D {
          * @param g Green component in [0, 255]
          * @param b Blue component in [0, 255]
          */
-        void addSpecialMesh(String meshName, 
+        void addSpecialMesh(string meshName, 
                                 double cx, double cy, double cz, 
                                 double rx, double ry, double rz,
                                 double sx, double sy, double sz,
                                 double r, double g, double b) {
-            string meshJSON;
+            stringstream meshJSON;
             meshJSON << "{\"type\":\"mesh\",\n";
             meshJSON << "\"material\":\"" << getColorString(r, g, b) << "\",\n";
             meshJSON << "\"filename\":\"../meshes/" << meshName << ".off\"}";
@@ -467,3 +469,5 @@ class Scene3D {
             out.close();
         }
 };
+
+#endif
