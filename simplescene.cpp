@@ -39,18 +39,27 @@ void drawSign(Scene3D& scene, double cx, double cz,
  */
 void drawScene() {
     Scene3D scene;
-    scene.addCamera(0, 2, 0, 0);
-    scene.addCamera(0, 2, -20, 180);
+    // LIGHTS
     scene.addLight(0, 100, 0, 1, 1, 1);
     scene.addLight(0, -100, 0, 1, 1, 1);
     scene.addLight(-100, 100, 0, 1, 1, 1);
     scene.addLight(100, -100, 0, 1, 1, 1);
     
+    // CAMERA
+    scene.addCamera(0, 2, 0, 0);
+    scene.addCamera(0, 2, -20, 180);
+
+    // ACTION
     // Add a large gray box for the ground
     scene.addBox(0, -25, 0, 1000, 50, 1000, 127, 127, 127);
-    drawSign(scene, -2, -5, true, 255, 0, 0); // Red (255, 0, 0) sign at location (-2, -5)
-    drawSign(scene, 0, -10, false, 0, 255, 0); // Green (0, 255, 0) sign at location (0, -10)
-    scene.addSpecialMesh("homer", 0, 1, -7, 0, 1, 0, 1, 1, 1, 255, 255, 0); // Homer simpson
+    // Draw a red sign 5 units in front in z and two units to 
+    // the left in x that's oriented from east to west
+    drawSign(scene, -2, -5, true, 255, 0, 0); // Red (255, 0, 0)
+    // Draw a green sign 10 units in front of z that's 
+    // oriented from north to south
+    drawSign(scene, 0, -10, false, 0, 255, 0); // Green (0, 255, 0)
+    // Draw a yellow Homer Simpson
+    scene.addSpecialMesh("homer", 0, 1, -7, 0, 1, 0, 1, 1, 1, 255, 255, 0); 
 
     scene.saveScene("simplescene.json", "Simple Sample Scene");
 }
