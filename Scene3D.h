@@ -134,6 +134,19 @@ class Scene3D {
             return json.str();
         }
 
+        /**
+         * Return a string that puts everything together 
+         */
+        string getFullSceneString(string sceneName) {
+            stringstream json;
+            json << "{\n\"name\":\"" << sceneName << "\",\n";
+            json << getMaterialsJSON() << ",\n";
+            json << getLightsJSON() << ",\n";
+            json << getCamerasJSON() << ",\n";
+            json << getShapesJSON() << "\n}";
+            return json.str();
+        }
+
 
 
     public:
@@ -458,15 +471,18 @@ class Scene3D {
          * @param sceneName Title of the scene to display in the viewer
          */
         void saveScene(string filename, string sceneName) {
-            stringstream json;
-            json << "{\n\"name\":\"" << sceneName << "\",\n";
-            json << getMaterialsJSON() << ",\n";
-            json << getLightsJSON() << ",\n";
-            json << getCamerasJSON() << ",\n";
-            json << getShapesJSON() << "\n}";
             std::ofstream out(filename.c_str());
-            out << json.str();
+            string json = getFullSceneString(sceneName);
+            out << json;
             out.close();
+        }
+
+        /**
+         * Print JSON for the scene to standard out   
+         * @param sceneName Title of the scene to display in the viewer
+         */
+        void printScene(string sceneName) {
+            cout << getFullSceneString(sceneName);
         }
 };
 
