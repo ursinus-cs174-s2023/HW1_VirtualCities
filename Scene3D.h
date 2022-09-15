@@ -422,7 +422,7 @@ class Scene3D {
             stringstream meshJSON;
             meshJSON << "{\"type\":\"mesh\",\n";
             meshJSON << "\"material\":\"" << getColorString(r, g, b) << "\",\n";
-            meshJSON << "\"filename\":\"../meshes/" << meshName << ".off\"}";
+            meshJSON << "\"filename\":\"../../meshes/" << meshName << ".off\"}";
             shapesJSON.push_back(getTransformationHierarchy(cx, cy, cz, rx, ry, rz, sx, sy, sz, meshJSON.str()));
         }
         
