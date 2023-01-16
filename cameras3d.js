@@ -57,7 +57,7 @@ class Camera3D {
             far = Camera3D.DEFAULT_FAR;
         }
         this.far = far;
-        this.camera = new THREE.PerspectiveCamera(fovy, fovx/fovy, near, far);
+        this.camera = new THREE.PerspectiveCamera(fovy*180/Math.PI, fovx/fovy, near, far);
     }
 
     /**
@@ -136,6 +136,29 @@ class Camera3D {
         glMatrix.quat.fromMat3(q, rotMat);
         return q;
     }
+
+    /**
+     * Send the position information over to the three.js camera object
+     */
+    updatePos() {
+        this.camera.position.x = this.pos[0];
+        this.camera.position.y = this.pos[1];
+        this.camera.position.z = this.pos[2];
+    }
+
+    /**
+     * Send the rotation information over to the three.js camera object
+     */
+    updateRot() {
+        let q = this.getQuatFromRot();
+        q = new THREE.Quaternion(q[0], q[1], q[2], q[3]);
+        let e = new THREE.Euler();
+        e.setFromQuaternion(q);
+        this.camera.rotation.x = e.x;
+        this.camera.rotation.y = e.y;
+        this.camera.rotation.z = e.z;
+    }
+        
 }
 // Default values, assuming 4:3 aspect ratio
 Camera3D.DEFAULT_FOVX = 1.4;
@@ -161,23 +184,6 @@ class FPSCamera extends Camera3D {
         this.up = glMatrix.vec3.fromValues(0, 1, 0);
         this.pos = glMatrix.vec3.fromValues(0, 0, 0);
         this.rotation = vecToStr(this.getQuatFromRot());
-    }
-
-    /**
-     * Send the position information over to the three.js camera object
-     */
-    updatePos() {
-        this.camera.position.x = this.pos[0];
-        this.camera.position.y = this.pos[1];
-        this.camera.position.z = this.pos[2];
-    }
-
-    /**
-     * Send the rotation information over to the three.js camera object
-     */
-    updateRot() {
-        let q = this.getQuatFromRot();
-        this.camera.applyQuaternion(new THREE.Quaternion(q[0], q[1], q[2], q[3]));
     }
     
     /**

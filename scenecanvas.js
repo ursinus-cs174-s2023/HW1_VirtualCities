@@ -36,22 +36,21 @@ class SceneCanvas {
         if (winFac === undefined) {
             winFac = 0.8;
         }
-        const scene = new THREE.Scene();
-        let fovy = 75;
-        let fovx = (window.innerWidth/window.innerHeight)*fovy;
-        const camera = new FPSCamera(fovx, fovy);
-        this.scene = scene;
-        this.cameras = [camera];
-        this.camera = camera;
-
+        
         this.materials = {};
-
         const renderer = new THREE.WebGLRenderer();
         const W = Math.round(window.innerWidth*winFac);
         const H = Math.round(window.innerHeight*winFac);
         this.W = W;
         this.H = H;
         renderer.setSize(W, H);
+
+        const scene = new THREE.Scene();
+        this.scene = scene;
+        const camera = new FPSCamera(W, H);
+        this.cameras = [camera];
+        this.camera = camera;
+
         document.body.appendChild(renderer.domElement);
         this.glcanvas = renderer.domElement;
         this.renderer = renderer;
@@ -203,12 +202,12 @@ class SceneCanvas {
         }
         else if (this.dragging && this.camera.type == "fps") {
             //Rotate camera by mouse dragging
-            this.camera.rotateLeftRight(-dX);
+            this.camera.rotateLeftRight(dX);
             if (this.invertYAxis) {
-                this.camera.rotateUpDown(dY);
+                this.camera.rotateUpDown(-dY);
             }
             else {
-                this.camera.rotateUpDown(-dY);
+                this.camera.rotateUpDown(dY);
             }
             let noKeysPressing = true;
             for (let name in this.keysDown) {
