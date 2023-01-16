@@ -23,14 +23,14 @@
 void drawSign(Scene3D& scene, double cx, double cz, 
                             bool isEastWest, double r, double g, double b) {
     // Draw the main pole
-    scene.addCylinder(cx, 1, cz, 0.05, 2, 127, 127, 127); 
+    scene.addCylinder(cx, 1, cz, 0.05, 2, 127, 127, 127, 1, 0); 
     if (isEastWest) {
         // Draw a 0.5 x 0.5 box in the X/Y plane, with a thin dimension in Z
-        scene.addBox(cx, 2, cz, 0.5, 0.5, 0.1, r, g, b);
+        scene.addBox(cx, 2, cz, 0.5, 0.5, 0.1, r, g, b, 1, 0);
     }
     else {
         // Draw a 0.5 x 0.5 box in the Y/Z plane, with a thin dimension in X
-        scene.addBox(cx, 2, cz, 0.1, 0.5, 0.5, r, g, b);
+        scene.addBox(cx, 2, cz, 0.1, 0.5, 0.5, r, g, b, 1, 0);
     }
 }    
 
@@ -40,10 +40,10 @@ void drawSign(Scene3D& scene, double cx, double cz,
 void drawScene() {
     Scene3D scene;
     // LIGHTS
-    scene.addLight(0, 100, 0, 1, 1, 1);
-    scene.addLight(0, -100, 0, 1, 1, 1);
-    scene.addLight(-100, 100, 0, 1, 1, 1);
-    scene.addLight(100, -100, 0, 1, 1, 1);
+    scene.addPointLight(0, 100, 0, 1, 1, 1);
+    scene.addPointLight(0, -100, 0, 1, 1, 1);
+    scene.addPointLight(-100, 100, 0, 1, 1, 1);
+    scene.addPointLight(100, -100, 0, 1, 1, 1);
     
     // CAMERA
     scene.addCamera(0, 2, 0, 0);
@@ -51,17 +51,17 @@ void drawScene() {
 
     // ACTION
     // Add a large gray box for the ground
-    scene.addBox(0, -25, 0, 1000, 50, 1000, 127, 127, 127);
+    scene.addBox(0, -25, 0, 1000, 50, 1000, 127, 127, 127, 1, 0);
     // Draw a red sign 5 units in front in z and two units to 
     // the left in x that's oriented from east to west
     drawSign(scene, -2, -5, true, 255, 0, 0); // Red (255, 0, 0)
     // Draw a green sign 10 units in front of z that's 
     // oriented from north to south
     drawSign(scene, 0, -10, false, 0, 255, 0); // Green (0, 255, 0)
-    // Draw a yellow Homer Simpson
-    scene.addSpecialMesh("homer", 0, 1, -7, 0, 1, 0, 1, 1, 1, 255, 255, 0); 
+    // Draw a shiny, metallic, yellow Homer Simpson
+    scene.addMesh("meshes/homer.obj", 0, 1, -7, 0, 1, 0, 1, 1, 1, 255, 255, 0, 0, 1); 
 
-    scene.saveScene("simplescene.json", "Simple Sample Scene");
+    scene.saveScene("simplescene.html", "Simple Sample Scene");
 }
 
 int main() {
