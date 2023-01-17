@@ -123,6 +123,7 @@ class Camera3D {
             rotMat[i*3+1] = this.up[i];
             rotMat[i*3+2] = T[i];
         }
+        glMatrix.mat3.transpose(rotMat, rotMat);
         return rotMat;
     }
     /** 

@@ -1,4 +1,5 @@
 const RADIAL_SEGMENTS = 32; // For spheres, cylinders, and cones
+const BEACON_SIZE = 0.1; // For point lights
 
 function getMaterialPrefix(r, g, b, roughness, metalness) {
     return r + "_" + g + "_" + b + "_" + roughness + "_" + metalness;
@@ -38,7 +39,7 @@ class SceneCanvas {
         }
         
         this.materials = {};
-        const renderer = new THREE.WebGLRenderer();
+        const renderer = new THREE.WebGLRenderer({antialias:true});
         const W = Math.round(window.innerWidth*winFac);
         const H = Math.round(window.innerHeight*winFac);
         this.W = W;
@@ -202,12 +203,12 @@ class SceneCanvas {
         }
         else if (this.dragging && this.camera.type == "fps") {
             //Rotate camera by mouse dragging
-            this.camera.rotateLeftRight(dX);
+            this.camera.rotateLeftRight(-dX);
             if (this.invertYAxis) {
-                this.camera.rotateUpDown(-dY);
+                this.camera.rotateUpDown(dY);
             }
             else {
-                this.camera.rotateUpDown(dY);
+                this.camera.rotateUpDown(-dY);
             }
             let noKeysPressing = true;
             for (let name in this.keysDown) {
@@ -633,11 +634,18 @@ class SceneCanvas {
      * @param b Blue component of light in [0, 255]
      */
     addPointLight(x, y, z, r, g, b) {
-        let light = new THREE.PointLight(new THREE.Color("rgb("+r+","+g+","+b+")"));
+        const color = new THREE.Color("rgb("+r+","+g+","+b+")");
+        let light = new THREE.PointLight(color);
         light.position.x = x;
         light.position.y = y;
         light.position.z = z;
         this.scene.add(light);
+        // Add a beacon so it's clear where the light is
+        const geometry = new THREE.SphereGeometry(BEACON_SIZE, RADIAL_SEGMENTS, RADIAL_SEGMENTS);
+        const material = new MeshStandardMaterial({"emissive":color});
+        const sphere = new THREE.Mesh(geometry, material);
+        setObjectPosRot(sphere, x, y, z, 0, 0, 0);
+        this.scene.add(sphere);
     }
 
     /**
@@ -927,9 +935,9 @@ class SceneCanvas {
     }
 
     repaint() {
-        if (!(this.obj === undefined)) {
+        /*if (!(this.obj === undefined)) {
             this.obj.rotation.y += 0.01;
-        }
+        }*/
 
         // Redraw if walking
         let thisTime = (new Date()).getTime();
@@ -947,12 +955,3 @@ class SceneCanvas {
         requestAnimationFrame(this.repaint.bind(this));
     }
 }
-
-
-let canvas = new SceneCanvas();
-//canvas.addEllipsoid(0, 0, -5, 1, 2, 1, 255, 255, 0, 0, 0);
-canvas.addPointLight(0, 0, 0, 255, 255, 255);
-//canvas.addTexturedMesh("meshes/smokestack/medres.obj", "meshes/smokestack/medres.mtl", 0, 0, -0.5, 0, 0, 0, 1, 1, 1);
-//canvas.addTexturedMesh("meshes/smokestack/medres.obj", "", 0, 0, -0.5, 0, 0, 0, 1, 1, 1);
-canvas.addMesh("meshes/proftralie.obj", 0, 0, -4, 0, 0, 0, 1, 1, 1, 255, 0, 0, 0, 0);
-canvas.repaint();

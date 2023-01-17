@@ -40,10 +40,10 @@ void drawSign(Scene3D& scene, double cx, double cz,
 void drawScene() {
     Scene3D scene;
     // LIGHTS
-    scene.addPointLight(0, 100, 0, 1, 1, 1);
-    scene.addPointLight(0, -100, 0, 1, 1, 1);
-    scene.addPointLight(-100, 100, 0, 1, 1, 1);
-    scene.addPointLight(100, -100, 0, 1, 1, 1);
+    scene.addPointLight(-100, 100, 0, 200, 200, 200);
+    scene.addPointLight(100, 100, 0, 200, 200, 200);
+    scene.addPointLight(0, 100, -100, 200, 200, 200);
+    scene.addPointLight(0, 100, 100, 200, 200, 200);
     
     // CAMERA
     scene.addCamera(0, 2, 0, 0);
@@ -51,15 +51,15 @@ void drawScene() {
 
     // ACTION
     // Add a large gray box for the ground
-    scene.addBox(0, -25, 0, 1000, 50, 1000, 127, 127, 127, 1, 0);
+    scene.addBox(0, -25, 0, 1000, 50, 1000, 100, 100, 100, 1, 0);
     // Draw a red sign 5 units in front in z and two units to 
     // the left in x that's oriented from east to west
     drawSign(scene, -2, -5, true, 255, 0, 0); // Red (255, 0, 0)
     // Draw a green sign 10 units in front of z that's 
     // oriented from north to south
     drawSign(scene, 0, -10, false, 0, 255, 0); // Green (0, 255, 0)
-    // Draw a shiny, metallic, yellow Homer Simpson
-    scene.addMesh("meshes/homer.obj", 0, 1, -7, 0, 1, 0, 1, 1, 1, 255, 255, 0, 0, 1); 
+    // Draw a shiny, stone-like, yellow Homer Simpson
+    scene.addMesh("meshes/homer.obj", 1, 1.4, -7, 0, 0, 0, 1, 1, 1, 255, 255, 0, 1, 1); 
 
     scene.saveScene("simplescene.html", "Simple Sample Scene");
 }
