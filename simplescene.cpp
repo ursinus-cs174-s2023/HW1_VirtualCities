@@ -60,6 +60,7 @@ void drawScene() {
     drawSign(scene, 0, -10, false, 0, 255, 0); // Green (0, 255, 0)
     // Draw a shiny, stone-like, yellow Homer Simpson
     scene.addMesh("meshes/homer.obj", 1, 1.4, -7, 0, 0, 0, 1, 1, 1, 255, 255, 0, 1, 1); 
+    scene.addTexturedMesh("meshes/smokestack/medres.obj", "meshes/smokestack/medres.mtl", 0, 18, -20, 0, 180, 0, 10, 10, 10);
 
     scene.saveScene("simplescene.html", "Simple Sample Scene");
 }

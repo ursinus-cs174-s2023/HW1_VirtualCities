@@ -32,23 +32,18 @@ class Camera3D {
     /**
     * @param {int} pixWidth Width of viewing window
     * @param {int} pixHeight Height of viewing window
-    * @param {float} fovx Field of view in x direction
-    * @param {float} fovy Field of view in y direction
+    * @param {float} fov Field of view in y direction
     * @param {float} near Distance to near viewing plane
     * @param {float} far Distance to far viewing plane
     */
-    constructor(pixWidth, pixHeight, fovx, fovy, near, far) {
+    constructor(pixWidth, pixHeight, fov, near, far) {
         this.type = "default";
         this.pixWidth = pixWidth;
         this.pixHeight = pixHeight;
-        if (fovx === undefined) {
-            fovx = Camera3D.DEFAULT_FOVY;
+        if (fov === undefined) {
+            fov = Camera3D.DEFAULT_FOV;
         }
-        this.fovx = fovx;
-        if (fovy === undefined) {
-            fovy = Camera3D.DEFAULT_FOVY;
-        }
-        this.fovy = fovy;
+        this.fov = fov;
         if (near === undefined) {
             near = Camera3D.DEFAULT_NEAR;
         }
@@ -57,7 +52,7 @@ class Camera3D {
             far = Camera3D.DEFAULT_FAR;
         }
         this.far = far;
-        this.camera = new THREE.PerspectiveCamera(fovy*180/Math.PI, fovx/fovy, near, far);
+        this.camera = new THREE.PerspectiveCamera(fov*180/Math.PI, pixWidth/pixHeight, near, far);
     }
 
     /**
@@ -162,8 +157,7 @@ class Camera3D {
         
 }
 // Default values, assuming 4:3 aspect ratio
-Camera3D.DEFAULT_FOVX = 1.4;
-Camera3D.DEFAULT_FOVY = 1.05;
+Camera3D.DEFAULT_FOV = 1.4;
 Camera3D.DEFAULT_NEAR = 0.01;
 Camera3D.DEFAULT_FAR = 1000;
 
@@ -173,13 +167,12 @@ class FPSCamera extends Camera3D {
     /**
     * @param {int} pixWidth Width of viewing window
     * @param {int} pixHeight Height of viewing window
-    * @param {float} fovx Field of view in x direction
-    * @param {float} fovy Field of view in y direction
+    * @param {float} fov Field of view in y direction
     * @param {float} near Distance to near viewing plane
     * @param {float} far Distance to far viewing plane
      */
-    constructor(pixWidth, pixHeight, fovx, fovy, near, far) {
-        super(pixWidth, pixHeight, fovx, fovy, near, far);
+    constructor(pixWidth, pixHeight, fov, near, far) {
+        super(pixWidth, pixHeight, fov, near, far);
         this.type = "fps";
         this.right = glMatrix.vec3.fromValues(1, 0, 0);
         this.up = glMatrix.vec3.fromValues(0, 1, 0);
@@ -208,7 +201,7 @@ class FPSCamera extends Camera3D {
      * @param {float} ud Up down motion, in pixels 
      */
     rotateUpDown = function(ud) {
-        let thetaud = 2.0*this.fovy*ud/this.pixHeight;
+        let thetaud = 2.0*this.fov*ud/this.pixHeight;
         this.rotateUpDownTheta(thetaud);
     }
 
@@ -231,7 +224,7 @@ class FPSCamera extends Camera3D {
      * @param {float} lr Left/right motion of the mouse, in pixels
      */
     rotateLeftRight(lr) {
-        let thetalr = 2.0*this.fovx*lr/this.pixWidth;
+        let thetalr = 2.0*this.fov*lr/this.pixHeight;
         this.rotateLeftRightTheta(thetalr);
     }
 
