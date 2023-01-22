@@ -172,7 +172,7 @@ class Camera3D {
         
 }
 // Default values, assuming 4:3 aspect ratio
-Camera3D.DEFAULT_FOV = 1.4;
+Camera3D.DEFAULT_FOV = 1.05;
 Camera3D.DEFAULT_NEAR = 0.01;
 Camera3D.DEFAULT_FAR = 1000;
 

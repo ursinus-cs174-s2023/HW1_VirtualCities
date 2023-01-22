@@ -271,12 +271,14 @@ class Scene3D {
         * @param sx Scale along x-axis
         * @param sy Scale along y-axis
         * @param sz Scale along z-axis
+        * @param shininess A number in [0, 255] describing how shiny the mesh is
         */
         void addTexturedMesh(string path, string matpath,
                         double cx, double cy, double cz, 
                         double rx, double ry, double rz,
-                        double sx, double sy, double sz) {
-            sceneCode << "canvas.addTexturedMesh(\"" << path << "\",\"" << matpath << "\"," << cx << "," << cy << "," << cz << "," << rx << "," << ry << "," << rz << "," << sx << "," << sy << "," << sz << ");\n";
+                        double sx, double sy, double sz,
+                        double shininess) {
+            sceneCode << "canvas.addTexturedMesh(\"" << path << "\",\"" << matpath << "\"," << cx << "," << cy << "," << cz << "," << rx << "," << ry << "," << rz << "," << sx << "," << sy << "," << sz << "," << shininess << ");\n";
         }
         
         

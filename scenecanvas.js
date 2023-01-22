@@ -41,8 +41,6 @@ class SceneCanvas {
         const renderer = new THREE.WebGLRenderer({antialias:true});
         let W = Math.round(window.innerWidth*winFac);
         let H = Math.round(window.innerHeight*winFac);
-        H = Math.min(W, H);
-        W = H*4/3;
         this.W = W;
         this.H = H;
         renderer.setSize(W, H);
@@ -850,8 +848,9 @@ class SceneCanvas {
      * @param sx Scale along x-axis
      * @param sy Scale along y-axis
      * @param sz Scale along z-axis
+     * @param shininess A number in [0, 255] describing how shiny the mesh is
      */
-    addTexturedMesh(path, matpath, cx, cy, cz, rx, ry, rz, sx, sy, sz) {
+    addTexturedMesh(path, matpath, cx, cy, cz, rx, ry, rz, sx, sy, sz, shininess) {
         const manager = new THREE.LoadingManager();
         const that = this;
         const mtlLoader = new MTLLoader(manager);
@@ -859,6 +858,8 @@ class SceneCanvas {
         mtlLoader.load(matpath, (mtl) => {
             mtl.preload();
             objLoader.setMaterials(mtl);
+            console.log(mtl.materials.Default_OBJ);
+            mtl.materials.Default_OBJ.shininess = shininess;
             objLoader.load(path, function(obj) {       
                 setObjectPosRot(obj, cx, cy, cz, rx, ry, rz);
                 setObjectScale(obj, sx, sy, sz);

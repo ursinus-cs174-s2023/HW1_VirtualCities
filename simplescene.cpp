@@ -42,16 +42,17 @@ void drawScene() {
     // LIGHTS
     scene.addPointLight(-100, 200, 0, 200, 200, 200, 1.0);
     scene.addPointLight(100, 200, 0, 200, 200, 200, 1.0);
-    scene.addPointLight(0, 200, -100, 200, 200, 200, 1.0);
-    scene.addPointLight(0, 200, 100, 200, 200, 200, 1.0);
+    scene.addPointLight(0, 0, -100, 200, 200, 200, 1.0);
+    scene.addPointLight(0, 0, 100, 200, 200, 200, 1.0);
     
     // CAMERA
     scene.addCamera(0, 2, 0, 0);
     scene.addCamera(0, 2, -40, 180);
 
     // ACTION
-    // Add a large brown box for the ground
-    scene.addBox(0, -25, 0, 1000, 50, 1000, 45, 25, 8, 1, 0);
+    // Add a large gray sbox for the ground
+    scene.addBox(0, -25, 0, 1000, 50, 1000, 100, 100, 100, 1, 0);
+
     // Draw a red sign 5 units in front in z and two units to 
     // the left in x that's oriented from east to west
     drawSign(scene, -2, -5, true, 255, 0, 0); // Red (255, 0, 0)
@@ -60,7 +61,7 @@ void drawScene() {
     drawSign(scene, 0, -10, false, 0, 255, 0); // Green (0, 255, 0)
     // Draw a shiny, stone-like, yellow Homer Simpson
     scene.addMesh("meshes/homer.obj", 1, 1.4, -7, 0, 0, 0, 1, 1, 1, 255, 255, 0, 1, 1); 
-    scene.addTexturedMesh("meshes/smokestack/medres.obj", "meshes/smokestack/medres.mtl", 0, 18, -20, 0, 180, 0, 10, 10, 10);
+    scene.addTexturedMesh("meshes/smokestack/medres.obj", "meshes/smokestack/medres.mtl", 0, 18, -20, 0, 180, 0, 10, 10, 10, 0);
 
     scene.saveScene("simplescene.html", "Simple Sample Scene");
 }
