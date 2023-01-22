@@ -46,8 +46,8 @@ void drawScene() {
     scene.addPointLight(0, 200, 100, 200, 200, 200, 1.0);
     
     // CAMERA
-    //scene.addCamera(0, 2, 0, 0);
-    //scene.addCamera(0, 2, -20, 180);
+    scene.addCamera(0, 2, 0, 0);
+    scene.addCamera(0, 2, -40, 180);
 
     // ACTION
     // Add a large brown box for the ground

@@ -49,16 +49,14 @@ class SceneCanvas {
 
         const scene = new THREE.Scene();
         this.scene = scene;
-        const camera = new FPSCamera(W, H);
-        this.cameras = [camera];
-        this.camera = camera;
-
-        this.lights = [];
 
         document.body.appendChild(renderer.domElement);
         this.glcanvas = renderer.domElement;
         this.renderer = renderer;
         this.initializeCallbacks();
+        this.camera = null;
+        this.lights = [];
+        this.cameras = [];
         this.setupMenus();
     }
 
@@ -339,14 +337,22 @@ class SceneCanvas {
         this.lightMenu = gui.addFolder('Lights');
         this.lightMenus = []; // Individual menus for each light
         this.showLights = true;
-        this.lightMenu.add(canvas, 'showLights');
+        this.lightMenu.add(canvas, 'showLights').onChange(function(v) {
+            for (let i = 0; i < canvas.lights.length; i++) {
+                canvas.lights[i].beacon.visible = v;
+            }
+        });
 
         // Camera control menu
         this.cameraMenu = gui.addFolder('Cameras');
         this.cameraMenus = []; // Individual menus for each camera
         let cameraMenu = this.cameraMenu;
         this.showCameras = true;
-        cameraMenu.add(canvas, 'showCameras');
+        cameraMenu.add(canvas, 'showCameras').onChange(function(v) {
+            for (let i = 0; i < canvas.cameras.length; i++) {
+                canvas.cameras[i].axes.visible = v;
+            }
+        });
         this.invertYAxis = false;
         cameraMenu.add(canvas, 'invertYAxis');
 
@@ -436,7 +442,8 @@ class SceneCanvas {
         this.lightMenus.push(menu);
         let res = menu.add(light.camera, 'position').listen().onChange(
             function(value) {
-                light.camera.updatePos(splitVecStr(value));
+                light.camera.pos = splitVecStr(value);
+                light.camera.updatePos();
             }
         );
         light.posMenu = res;
@@ -479,101 +486,80 @@ class SceneCanvas {
     /**
      * Setup menus to control positions and orientations of cameras
      * 
-     * @param {object} scene The scene object
-     * @param {int} pixWidth Width of the canvas in pixels
-     * @param {int} pixHeight Height of the canvas in pixels
      */
-    setupCameraMenus(scene, pixWidth, pixHeight) {
-        let canvas = this;
-        this.cameraMenus.forEach(function(menu) {
-            canvas.cameraMenu.removeFolder(menu);
-        });
-        this.cameraMenus = [];
-        scene.cameras.forEach(function(c, i) {
-            c.camera = new FPSCamera(pixWidth, pixHeight);
-            canvas.fillInCamera(c.camera, c);
-            // Also add each camera to a GUI control
-            let menu = canvas.cameraMenu.addFolder("camera " + i);
-            canvas.cameraMenus.push(menu);
+    addCameraToMenu(c, x, y, z) {
+        const canvas = this;
+        this.cameras.push(c);
+        c.pos = [x, y, z];
+        c.updatePos();
+        let i = this.cameras.length;
 
-            // Setup mechanism to move camera around with keyboard/mouse
-            if (i == 0) {
-                c.viewFrom = true;
-            }
-            else {
-                c.viewFrom = false;
-            }
-            menu.add(c, 'viewFrom').listen().onChange(
-                function(v) {
-                    if (v) {
-                        // Toggle other cameras viewFrom
-                        scene.cameras.forEach(function(other) {
-                            if (!(other === c)) {
-                                other.viewFrom = false;
-                            }
-                        });
-                        // Turn off all viewFrom in lights
-                        scene.lights.forEach(function(light) {
-                            light.viewFrom = false;
-                        });
-                        canvas.camera = c.camera;
-                        requestAnimFrame(canvas.repaint.bind(canvas));
-                    }
-                }
-            );
-            c.addToAnimation = function() {
-                if (canvas.animation.cameraSequence.length > 0) {
-                    canvas.animation.cameraSequence += ", ";
-                }
-                canvas.animation.cameraSequence += "" + i;
-            }
-            menu.add(c, 'addToAnimation');
+        // Also add each camera to a GUI control
+        let menu = canvas.cameraMenu.addFolder("camera " + i);
+        canvas.cameraMenus.push(menu);
 
-            c.camera.position = vecToStr(c.camera.pos);
-            menu.add(c.camera, 'position').listen().onChange(
-                function(value) {
-                    let xyz = splitVecStr(value);
-                    for (let k = 0; k < 3; k++) {
-                        c.camera.pos[k] = xyz[k];
-                    }
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            menu.add(c.camera, 'rotation').listen().onChange(
-                function(value) {
-                    let xyzw = splitVecStr(value);
-                    for (let k = 0; k < 4; k++) {
-                        c.camera.rot[k] = xyzw[k];
-                    }
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            menu.add(c.camera, 'fovx', 0.5, 3).onChange(
-                function() {
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            menu.add(c.camera, 'fovy', 0.5, 3).onChange(
-                function() {
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            menu.add(c.camera, 'near', 0.001, 100000).onChange(
-                function() {
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            menu.add(c.camera, 'far', 0.001, 100000).onChange(
-                function() {
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-        });
-        if (scene.cameras.length > 0) {
-            // Add the first camera to the drawing parameters
-            scene.cameras[0].viewFrom = true;
-            canvas.camera = scene.cameras[0].camera;
+        // Setup mechanism to move camera around with keyboard/mouse
+        if (i == 1) {
+            c.viewFrom = true;
+            this.camera = c;
         }
+        else {
+            c.viewFrom = false;
+        }
+        menu.add(c, 'viewFrom').listen().onChange(
+            function(v) {
+                if (v) {
+                    // Toggle other cameras viewFrom
+                    canvas.cameras.forEach(function(other) {
+                        if (!(other === c)) {
+                            other.viewFrom = false;
+                        }
+                    });
+                    // Turn off all viewFrom in lights
+                    canvas.lights.forEach(function(light) {
+                        light.viewFrom = false;
+                    });
+                    canvas.camera = c;
+                }
+            }
+        );
+        /*c.addToAnimation = function() {
+            if (canvas.animation.cameraSequence.length > 0) {
+                canvas.animation.cameraSequence += ", ";
+            }
+            canvas.animation.cameraSequence += "" + i;
+        }
+        menu.add(c, 'addToAnimation');*/
+        menu.add(c, 'position').listen().onChange(
+            function(value) {
+                c.pos = splitVecStr(value);
+                c.updatePos();
+            }
+        );
+        menu.add(c, 'rotation').listen().onChange(
+            function(value) {
+                let xyzw = splitVecStr(value);
+                for (let k = 0; k < 4; k++) {
+                    c.rot[k] = xyzw[k];
+                }
+                c.updateRot();
+            }
+        );
+        menu.add(c.camera, 'near', 0.001, 100000).onChange(
+            function() {
+                c.camera.updateProjectionMatrix();
+            }
+        );
+        menu.add(c.camera, 'far', 0.001, 100000).onChange(
+            function() {
+                c.camera.updateProjectionMatrix();
+            }
+        );
+        menu.add(c.camera, 'fov', 1, 179).onChange(
+            function() {
+                c.camera.updateProjectionMatrix();
+            }
+        );
     }
 
     
@@ -668,10 +654,20 @@ class SceneCanvas {
      * @param rot Rotation in degrees about y-axis
      */
     addCamera(x, y, z, ry) {
-        const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        setObjectPosRot(camera, x, y, z, 0, ry, 0);
-        this.cameras.push(camera);
-        // TODO: Update menu
+        const camera = new FPSCamera(this.W, this.H);
+        // Add axes so it's clear where the camera is
+        const axes = new THREE.AxesHelper();
+        this.scene.add(axes);
+        camera.axes = axes;
+        camera.addTracker(axes);
+        // Update position and rotation
+        camera.pos = [x, y, z];
+        camera.updatePos();
+        let q = glMatrix.quat.create();
+        glMatrix.quat.fromEuler(q, 0, ry, 0);
+        camera.setRotFromQuat(q);
+        camera.updateRot();
+        this.addCameraToMenu(camera, x, y, z);
     }
 
     /**
@@ -935,6 +931,9 @@ class SceneCanvas {
                 this.camera.translate(this.movelr, 0, 0, this.walkspeed*dt);
                 this.camera.position = vecToStr(this.camera.pos);
             }
+        }
+        if (this.camera === null) {
+            this.addCamera(0, 0, 0, 0);
         }
         this.renderer.render(this.scene, this.camera.camera);
         requestAnimationFrame(this.repaint.bind(this));

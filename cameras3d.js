@@ -159,12 +159,15 @@ class Camera3D {
      */
     updateRot() {
         let q = this.getQuatFromRot();
+        this.rotation = vecToStr(q);
         q = new THREE.Quaternion(q[0], q[1], q[2], q[3]);
         let e = new THREE.Euler();
         e.setFromQuaternion(q);
-        this.camera.rotation.x = e.x;
-        this.camera.rotation.y = e.y;
-        this.camera.rotation.z = e.z;
+        for (let i = 0; i < this.threeTrackers.length; i++) {
+            this.threeTrackers[i].rotation.x = e.x;
+            this.threeTrackers[i].rotation.y = e.y;
+            this.threeTrackers[i].rotation.z = e.z;
+        }
     }
         
 }
@@ -232,7 +235,6 @@ class FPSCamera extends Camera3D {
         let q = glMatrix.quat.create();
         glMatrix.quat.setAxisAngle(q, this.right, thetaud);
         glMatrix.vec3.transformQuat(this.up, this.up, q);
-        this.rotation = vecToStr(this.getQuatFromRot());
         this.updateRot();
     }
     
@@ -263,7 +265,6 @@ class FPSCamera extends Camera3D {
         let dot = glMatrix.vec3.dot(this.right, this.up);
         glMatrix.vec3.scaleAndAdd(this.up, this.up, this.right, -dot);
         glMatrix.vec3.normalize(this.up, this.up);
-        this.rotation = vecToStr(this.getQuatFromRot());
         this.updateRot();
     }
 }
