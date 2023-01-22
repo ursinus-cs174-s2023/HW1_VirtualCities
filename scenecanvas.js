@@ -37,11 +37,12 @@ class SceneCanvas {
         if (winFac === undefined) {
             winFac = 0.8;
         }
-        
         this.materials = {};
         const renderer = new THREE.WebGLRenderer({antialias:true});
-        const W = Math.round(window.innerWidth*winFac);
-        const H = Math.round(window.innerHeight*winFac);
+        let W = Math.round(window.innerWidth*winFac);
+        let H = Math.round(window.innerHeight*winFac);
+        H = Math.min(W, H);
+        W = H*4/3;
         this.W = W;
         this.H = H;
         renderer.setSize(W, H);
@@ -51,6 +52,8 @@ class SceneCanvas {
         const camera = new FPSCamera(W, H);
         this.cameras = [camera];
         this.camera = camera;
+
+        this.lights = [];
 
         document.body.appendChild(renderer.domElement);
         this.glcanvas = renderer.domElement;
@@ -409,113 +412,68 @@ class SceneCanvas {
 
 
     /**
-     * Setup menus to control positions and colors of lights
-     * 
-     * @param {object} scene The scene object
-     * @param {int} pixWidth Width of the canvas in pixels
-     * @param {int} pixHeight Height of the canvas in pixels
+     * Add a light to the menu
+     * @param {three.js Light} light Light to add
+     * @param x X position of light
+     * @param y Y position of light
+     * @param z Z position of light
+     * @param r Red component of light in [0, 255]
+     * @param g Green component of light in [0, 255]
+     * @param b Blue component of light in [0, 255]
      */
-    setupLightMenus(scene, pixWidth, pixHeight) {
+    addLightToMenu(light, x, y, z, r, g, b) {
         let canvas = this;
+        this.lights.push(light);
+        let i = this.lights.length;
         // Add a camera object to each light so that the user can
         // move the lights around
+        light.camera = new FPSCamera(this.W, this.H, [x, y, z]);
+        light.camera.addTracker(light);
+        light.camera.addTracker(light.beacon);
+        light.color_rgb = [r, g, b];
+        // Also add each light to a GUI control
+        let menu = canvas.lightMenu.addFolder("light " + i);
+        this.lightMenus.push(menu);
+        let res = menu.add(light.camera, 'position').listen().onChange(
+            function(value) {
+                light.camera.updatePos(splitVecStr(value));
+            }
+        );
+        light.posMenu = res;
 
-        // Remove any menus that may have been there before
-        this.lightMenus.forEach(function(menu) {
-            canvas.lightMenu.removeFolder(menu);
-        });
-        this.lightMenus = [];
-        scene.lights.forEach(function(light, i) {
-            light.camera = new FPSCamera(pixWidth, pixHeight);
-            if (!('pos' in light)) {
-                light.pos = [0, 0, 0];
+        function updateColor(v) {
+            light.color.r = v[0]/255;
+            light.color.g = v[1]/255;
+            light.color.b = v[2]/255;
+            light.beacon.material.color.r = light.intensity*v[0]/255;
+            light.beacon.material.color.g = light.intensity*v[1]/255;
+            light.beacon.material.color.b = light.intensity*v[2]/255;
+        }
+        menu.addColor(light, 'color_rgb').onChange(
+            function(v) {
+                updateColor(v);
             }
-            if (!('color' in light)) {
-                light.color = [1, 1, 1];
+        );
+        menu.add(light, 'intensity', 0, 1).step(0.02);
+        // Setup mechanism to move light around with camera
+        light.viewFrom = false;
+        menu.add(light, 'viewFrom').listen().onChange(
+            function(v) {
+                if (v) {
+                    // Toggle other lights viewFrom
+                    canvas.lights.forEach(function(other) {
+                        if (!(other === light)) {
+                            other.viewFrom = false;
+                        }
+                    });
+                    // Turn off all cameras viewFrom
+                    canvas.cameras.forEach(function(camera) {
+                        camera.viewFrom = false;
+                    })
+                    canvas.camera = light.camera;
+                }
             }
-            if (!('atten' in light)) {
-                light.atten = [1, 0, 0];
-            }
-            if ('towards' in light) {
-                let towards = glMatrix.vec3.fromValues.apply(null, light.towards);
-                glMatrix.vec3.cross(light.camera.up, light.camera.right, towards);
-            }
-            else {
-                // Light points down by default
-                light.towards = [0, -1, 0];
-            }
-            if (!('angle' in light)) {
-                light.angle = Math.PI;
-            }
-            glMatrix.vec3.copy(light.camera.pos, light.pos);
-            light.pos = light.camera.pos;
-            // Also add each light to a GUI control
-            let menu = canvas.lightMenu.addFolder("light " + i);
-            canvas.lightMenus.push(menu);
-            light.camera.position = vecToStr(light.pos);
-            menu.add(light.camera, 'position').listen().onChange(
-                function(value) {
-                    let xyz = splitVecStr(value);
-                    for (let k = 0; k < 3; k++) {
-                        light.camera.pos[k] = xyz[k];
-                    }
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            light.color_rgb = [255*light.color[0], 255*light.color[1], 255*light.color[2]];
-            menu.addColor(light, 'color_rgb').onChange(
-                function(v) {
-                    light.color = glMatrix.vec3.fromValues(v[0]/255, v[1]/255, v[2]/255);
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            light.atten_c = light.atten[0];
-            light.atten_l = light.atten[1];
-            light.atten_q = light.atten[2];
-            menu.add(light, 'atten_c', 0, 5).step(0.02).onChange(
-                function(v) {
-                    light.atten[0] = v;
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            menu.add(light, 'atten_l', 0, 5).step(0.02).onChange(
-                function(v) {
-                    light.atten[1] = v;
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            menu.add(light, 'atten_q', 0, 5).step(0.02).onChange(
-                function(v) {
-                    light.atten[2] = v;
-                    requestAnimFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            menu.add(light, 'angle', 0, Math.PI).step(0.01).onChange(
-                function() {
-                    requestAnimationFrame(canvas.repaint.bind(canvas));
-                }
-            );
-            // Setup mechanism to move light around with camera
-            light.viewFrom = false;
-            menu.add(light, 'viewFrom').listen().onChange(
-                function(v) {
-                    if (v) {
-                        // Toggle other lights viewFrom
-                        scene.lights.forEach(function(other) {
-                            if (!(other === light)) {
-                                other.viewFrom = false;
-                            }
-                        });
-                        // Turn off all cameras viewFrom
-                        scene.cameras.forEach(function(camera) {
-                            camera.viewFrom = false;
-                        })
-                        canvas.camera = light.camera;
-                        requestAnimFrame(canvas.repaint.bind(canvas));
-                    }
-                }
-            )
-        });
+        );
     }
 
     /**
@@ -632,20 +590,51 @@ class SceneCanvas {
      * @param r Red component of light in [0, 255]
      * @param g Green component of light in [0, 255]
      * @param b Blue component of light in [0, 255]
+     * @param intensity The intensity of the light, in [0, 1]
      */
-    addPointLight(x, y, z, r, g, b) {
+    addPointLight(x, y, z, r, g, b, intensity) {
         const color = new THREE.Color("rgb("+r+","+g+","+b+")");
-        let light = new THREE.PointLight(color);
+        let light = new THREE.PointLight(color, intensity);
         light.position.x = x;
         light.position.y = y;
         light.position.z = z;
         this.scene.add(light);
         // Add a beacon so it's clear where the light is
         const geometry = new THREE.SphereGeometry(BEACON_SIZE, RADIAL_SEGMENTS, RADIAL_SEGMENTS);
-        const material = new MeshStandardMaterial({"emissive":color});
+        const material = new MeshBasicMaterial({"color":color});
         const sphere = new THREE.Mesh(geometry, material);
         setObjectPosRot(sphere, x, y, z, 0, 0, 0);
         this.scene.add(sphere);
+        light.beacon = sphere;
+        this.addLightToMenu(light, x, y, z, r, g, b);
+    }
+
+    /**
+     * Add a point light to the scene at a particular (x, y, z) position
+     * pointing towards the origin, and with a particular (r, g, b) color
+     * @param x X position of light
+     * @param y Y position of light
+     * @param z Z position of light
+     * @param r Red component of light in [0, 255]
+     * @param g Green component of light in [0, 255]
+     * @param b Blue component of light in [0, 255]
+     * @param intensity The intensity of the light
+     */
+    addDirectionalLight(x, y, z, r, g, b, intensity) {
+        const color = new THREE.Color("rgb("+r+","+g+","+b+")");
+        let light = new THREE.DirectionalLight(color, intensity);
+        light.position.x = x;
+        light.position.y = y;
+        light.position.z = z;
+        this.scene.add(light);
+        // Add a beacon so it's clear where the light is
+        const geometry = new THREE.RingGeometry(BEACON_SIZE/2, BEACON_SIZE, RADIAL_SEGMENTS, RADIAL_SEGMENTS);
+        const material = new MeshBasicMaterial({"color":color});
+        const ring = new THREE.Mesh(geometry, material);
+        setObjectPosRot(ring, x, y, z, 0, 0, 0);
+        this.scene.add(ring);
+        light.beacon = ring;
+        this.addLightToMenu(light, x, y, z, r, g, b);
     }
 
     /**
@@ -935,10 +924,6 @@ class SceneCanvas {
     }
 
     repaint() {
-        /*if (!(this.obj === undefined)) {
-            this.obj.rotation.y += 0.01;
-        }*/
-
         // Redraw if walking
         let thisTime = (new Date()).getTime();
         let dt = (thisTime - this.lastTime)/1000.0;

@@ -300,9 +300,26 @@ class Scene3D {
          * @param r Red component of light in [0, 255]
          * @param g Green component of light in [0, 255]
          * @param b Blue component of light in [0, 255]
+         * @param intensity The intensity of the light, in [0, 1]
          */
-        void addPointLight(double x, double y, double z, double r, double g, double b) {
-            sceneCode << "canvas.addPointLight(" << x << "," << y << "," << z << "," << r << "," << g << "," << b << ");\n";
+        void addPointLight(double x, double y, double z, double r, double g, double b, double intensity) {
+            sceneCode << "canvas.addPointLight(" << x << "," << y << "," << z << "," << r << "," << g << "," << b << "," << intensity << ");\n";
+        }
+
+        /**
+         * Add a directional light to the scene at a particular (x, y, z) position, pointing
+         * with parallel rays towards the origin (0, 0, 0)
+         * and with a particular (r, g, b) color
+         * @param x X position of light
+         * @param y Y position of light
+         * @param z Z position of light
+         * @param r Red component of light in [0, 255]
+         * @param g Green component of light in [0, 255]
+         * @param b Blue component of light in [0, 255]
+         * @param intensity The intensity of the light, in [0, 1]
+         */
+        void addDirectionalLight(double x, double y, double z, double r, double g, double b, double intensity) {
+            sceneCode << "canvas.addDirectionalLight(" << x << "," << y << "," << z << "," << r << "," << g << "," << b << "," << intensity << ");\n";
         }
 
         /**

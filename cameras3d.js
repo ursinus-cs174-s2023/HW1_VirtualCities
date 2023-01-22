@@ -53,6 +53,15 @@ class Camera3D {
         }
         this.far = far;
         this.camera = new THREE.PerspectiveCamera(fov*180/Math.PI, pixWidth/pixHeight, near, far);
+        this.threeTrackers = [this.camera]; //Three.js objects that track the position
+    }
+
+    /**
+     * A three.js object whose position tracks the position of this camera
+     * @param {three.js object} obj Three.js object
+     */
+    addTracker(obj) {
+        this.threeTrackers.push(obj);
     }
 
     /**
@@ -137,9 +146,12 @@ class Camera3D {
      * Send the position information over to the three.js camera object
      */
     updatePos() {
-        this.camera.position.x = this.pos[0];
-        this.camera.position.y = this.pos[1];
-        this.camera.position.z = this.pos[2];
+        this.position = vecToStr(this.pos);
+        for (let i = 0; i < this.threeTrackers.length; i++) {
+            this.threeTrackers[i].position.x = this.pos[0];
+            this.threeTrackers[i].position.y = this.pos[1];
+            this.threeTrackers[i].position.z = this.pos[2];
+        }
     }
 
     /**
@@ -167,16 +179,23 @@ class FPSCamera extends Camera3D {
     /**
     * @param {int} pixWidth Width of viewing window
     * @param {int} pixHeight Height of viewing window
+    * @param {vec3} pos Initial position of camera
     * @param {float} fov Field of view in y direction
     * @param {float} near Distance to near viewing plane
     * @param {float} far Distance to far viewing plane
      */
-    constructor(pixWidth, pixHeight, fov, near, far) {
+    constructor(pixWidth, pixHeight, pos, fov, near, far) {
         super(pixWidth, pixHeight, fov, near, far);
         this.type = "fps";
         this.right = glMatrix.vec3.fromValues(1, 0, 0);
         this.up = glMatrix.vec3.fromValues(0, 1, 0);
-        this.pos = glMatrix.vec3.fromValues(0, 0, 0);
+        if (pos === undefined) {
+            this.pos = glMatrix.vec3.fromValues(0, 0, 0);
+        }
+        else {
+            this.pos = pos;
+        }
+        this.updatePos();
         this.rotation = vecToStr(this.getQuatFromRot());
     }
     
