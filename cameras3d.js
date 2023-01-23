@@ -196,7 +196,7 @@ class FPSCamera extends Camera3D {
             this.pos = glMatrix.vec3.fromValues(0, 0, 0);
         }
         else {
-            this.pos = pos;
+            this.pos = glMatrix.vec3.fromValues(pos[0], pos[1], pos[2]);
         }
         this.updatePos();
         this.rotation = vecToStr(this.getQuatFromRot());

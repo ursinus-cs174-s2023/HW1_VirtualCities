@@ -336,8 +336,6 @@ class SceneCanvas {
         // Title
         this.name = "Untitled Scene";
         gui.add(this, "name").listen();
-        
-        this.setupAnimationMenu();
 
         // Lighting menu
         this.lightMenu = gui.addFolder('Lights');
@@ -362,6 +360,9 @@ class SceneCanvas {
         this.invertYAxis = false;
         cameraMenu.add(canvas, 'invertYAxis');
 
+        // Animation menu
+        this.setupAnimationMenu();
+
         // Other options
         this.walkspeed = 2.6;
         gui.add(canvas, 'walkspeed', 0.01, 100);
@@ -375,16 +376,15 @@ class SceneCanvas {
         let gui = this.gui;
         let canvas = this;
         this.animationMenu = gui.addFolder("Animation");
-        this.animation = {framesPerStep:50, framesPerSec: 30, interpolation:'slerp', cameraSequence:''};
+        this.animation = {framesPerStep:50, framesPerSec: 30, cameraSequence:''};
         this.animationMenu.add(this.animation, "cameraSequence").listen();
         this.animationMenu.add(this.animation, 'framesPerStep');
         this.animationMenu.add(this.animation, 'framesPerSec');
-        this.animationMenu.add(this.animation, 'interpolation', ['slerp', 'euler']);
         this.animating = false;
         this.MakeGIF = function() {
             let a = canvas.animation;
             a.frame = 0;
-            let c = this.camera;
+            let c = canvas.camera;
             a.sequence = a.cameraSequence.split(",");
 
             if (a.sequence.length < 2) {
@@ -394,19 +394,19 @@ class SceneCanvas {
                 let valid = true;
                 for (let i = 0; i < a.sequence.length; i++) {
                     a.sequence[i] = parseInt(a.sequence[i]);
-                    if (a.sequence[i] >= this.scene.cameras.length) {
+                    if (a.sequence[i] >= canvas.cameras.length) {
                         alert("Animation Error: Camera " + a.sequence[i] + " does not exist!");
                         valid = false;
                     }
                 }
                 if (valid) {
                     canvas.animating = true;
-                    a.animCamera = new FPSCamera(c.pixWidth, c.pixHeight, c.fovx, c.fovy, c.near, c.far);
+                    a.animCamera = new FPSCamera(c.pixWidth, c.pixHeight, c.pos, c.fov, c.near, c.far);
                     // Remember which camera was used before so it can be restored
-                    a.cameraBefore = this.camera;
-                    this.camera = a.animCamera;
+                    a.cameraBefore = canvas.camera;
+                    canvas.camera = a.animCamera;
                     a.gif = new GIF({workers: 2, quality: 10, 
-                                    workerScript:"../jslibs/gif.worker.js",
+                                    workerScript:"jsmodules/gif.worker.js",
                                     width:c.pixWidth, height:c.pixHeight});
                     a.gif.on('finished', function(blob) {
                         window.open(URL.createObjectURL(blob));
@@ -415,7 +415,6 @@ class SceneCanvas {
                     // the camera displays for the animation
                     a.showCameras = canvas.showCameras;
                     canvas.showCameras = false;
-                    requestAnimationFrame(canvas.repaint.bind(canvas));
                 }
             }
         }
@@ -495,6 +494,7 @@ class SceneCanvas {
      */
     addCameraToMenu(c, x, y, z) {
         const canvas = this;
+        c.idx = this.cameras.length;
         this.cameras.push(c);
         c.pos = [x, y, z];
         c.updatePos();
@@ -529,13 +529,13 @@ class SceneCanvas {
                 }
             }
         );
-        /*c.addToAnimation = function() {
+        c.addToAnimation = function() {
             if (canvas.animation.cameraSequence.length > 0) {
                 canvas.animation.cameraSequence += ", ";
             }
-            canvas.animation.cameraSequence += "" + i;
+            canvas.animation.cameraSequence += "" + c.idx;
         }
-        menu.add(c, 'addToAnimation');*/
+        menu.add(c, 'addToAnimation');
         menu.add(c, 'position').listen().onChange(
             function(value) {
                 c.pos = splitVecStr(value);
@@ -932,7 +932,45 @@ class SceneCanvas {
         let thisTime = (new Date()).getTime();
         let dt = (thisTime - this.lastTime)/1000.0;
         this.lastTime = thisTime;
-        if (!this.animating) {
+
+        if (this.camera === null) {
+            this.addCamera(0, 0, 0, 0);
+        }
+
+        // Move the camera to the appropriate position/orientation if animating
+        if (this.animating) {
+            let a = this.animation;
+            // Frame in this leg of the animation
+            let frame = a.frame % a.framesPerStep; 
+            // Leg of the animation
+            let idx = (a.frame - frame)/a.framesPerStep;
+            if (idx > a.sequence.length - 2) {
+                // Reached end of animation; save gif
+                this.animating = false;
+                a.gif.render();
+                // Restore camera settings
+                this.showCameras = a.showCameras;
+                this.camera = a.cameraBefore;
+            }
+            else {
+                let t = frame/a.framesPerStep;
+                let idx1 = a.sequence[idx];
+                let idx2 = a.sequence[idx+1];
+                let camera1 = this.cameras[idx1];
+                let camera2 = this.cameras[idx2];
+                // Linearly interpolate between two cameras to get position
+                let pos = glMatrix.vec3.create();
+                glMatrix.vec3.lerp(pos, camera1.pos, camera2.pos, t);
+                this.camera.pos = pos;
+                this.camera.updatePos();
+                // Slerp interpolate the rotations
+                let rot = glMatrix.quat.create();
+                glMatrix.quat.slerp(rot, camera1.getQuatFromRot(), camera2.getQuatFromRot(), t);
+                this.camera.setRotFromQuat(rot);
+                this.camera.updateRot();
+            }
+        }
+        else {
             if (this.movelr != 0 || this.moveud != 0 || this.movefb != 0) {
                 this.camera.translate(0, 0, this.movefb, this.walkspeed*dt);
                 this.camera.translate(0, this.moveud, 0, this.walkspeed*dt);
@@ -940,10 +978,17 @@ class SceneCanvas {
                 this.camera.position = vecToStr(this.camera.pos);
             }
         }
-        if (this.camera === null) {
-            this.addCamera(0, 0, 0, 0);
-        }
+
         this.renderer.render(this.scene, this.camera.camera);
+
+        if (this.animating) {
+            let a = this.animation;
+            a.frame += 1;
+            let delay = Math.round(1000/a.framesPerSec);
+            a.gif.addFrame(canvas.glcanvas, {copy:true, delay:delay});
+            requestAnimationFrame(canvas.repaint.bind(canvas));
+        }
+        
         requestAnimationFrame(this.repaint.bind(this));
     }
 }
