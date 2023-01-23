@@ -334,6 +334,7 @@ class Scene3D {
             out << HTML_PREFIX;
             out << "<script>\n";
             out << sceneCode.str();
+            out << "canvas.name = \"" << sceneName << "\";\n";
             out << "canvas.repaint();\n</script>\n    </body>\n</html>";
             out.close();
         }

@@ -18,12 +18,20 @@ function colorFloatFromHex(s) {
 }
 
 function setObjectPosRot(obj, x, y, z, rx, ry, rz) {
+    // Update position
     obj.position.x = x;
     obj.position.y = y;
     obj.position.z = z;
-    obj.rotation.x = rx*Math.PI/180;
-    obj.rotation.y = ry*Math.PI/180;
-    obj.rotation.z = rz*Math.PI/180;
+
+    // Update rotation
+    let q = glMatrix.quat.create();
+    glMatrix.quat.fromEuler(q, rx, ry, rz);
+    q = new THREE.Quaternion(q[0], q[1], q[2], q[3]);
+    let e = new THREE.Euler();
+    e.setFromQuaternion(q);
+    obj.rotation.x = e.x;
+    obj.rotation.y = e.y;
+    obj.rotation.z = e.z;
 }
 
 function setObjectScale(obj, sx, sy, sz) {
@@ -741,7 +749,6 @@ class SceneCanvas {
         if (sz === undefined) {
             sz = 1;
         }
-        const radialSegments = 32;
         const geometry = new THREE.CylinderGeometry(radius, radius, height, RADIAL_SEGMENTS);
         const material = this.addMaterial(r, g, b, roughness, metalness);
         const cylinder = new THREE.Mesh(geometry, material);
