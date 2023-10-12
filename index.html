@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+    </head>
+    <body>
+        <!-- three.js scripts -->
+        <!-- startup three.js -->
+        <script src="jsmodules/three.min.js"></script>
+        <script src="jsmodules/three.module.js"></script>
+        <script src="jsmodules/gif.js"></script>
+        <!-- load models and look at them-->
+        <script src="jsmodules/OBJLoader.js"></script>
+        <script src="jsmodules/MTLLoader.js"></script>
+        <!-- postprocessing -->
+        <script src="jsmodules/CopyShader.js"></script>
+        <script src="jsmodules/Pass.js"></script>
+        <script src="jsmodules/ShaderPass.js"></script>
+        <script src="jsmodules/MaskPass.js"></script>
+        <script src="jsmodules/EffectComposer.js"></script>
+        <script src="jsmodules/RenderPass.js"></script>
+        <script src="jsmodules/DigitalGlitch.js"></script>
+        <script src="jsmodules/GlitchPass.js"></script>
+
+        <!--Other outside libraries -->
+        <script type="text/javascript" src="jsmodules/jquery-3.5.1.min.js"></script>
+        <script type="text/javascript" src="jsmodules/dat.gui.min.js"></script>
+        <script type="text/javascript" src="jsmodules/gl-matrix-min.js"></script>
+
+        <!-- Our code -->
+        <script type="text/javascript" src="cameras3d.js"></script>
+        <script type="text/javascript" src="scenecanvas.js"></script>
+
+
+        <table>
+            <h2>Scene Viewer</h2>
+            <p>
+                Upload an HTML file to view it here, with all of the meshes served properly
+            </p>
+            <tr><td><h3>Scene File</h3></td><td><input type = "file" id = "sceneInput"></td></tr>
+            </table>
+            
+            <script>
+                let sceneInput = document.getElementById('sceneInput');
+                
+                sceneInput.addEventListener('change', function(e) {
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        let lines = e.target.result.split("\n");
+                        let s = "";
+                        let inStr = false;
+                        for (let i = 0; i < lines.length; i++) {
+                            if (lines[i].indexOf("\<script\>") != -1) {
+                                inStr = true;
+                            }
+                            else if (inStr) {
+                                if (lines[i].indexOf("\</script\>") != -1) {
+                                    inStr = false;
+                                }
+                                else {
+                                    s += lines[i];
+                                }
+                            }
+                        }
+                        console.log(s);
+                        eval(s);
+                    }
+                    reader.readAsText(sceneInput.files[0]);
+                });
+            
+            </script>
+    </body>
+</html>
