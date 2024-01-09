@@ -18,6 +18,8 @@ using namespace std;
 
 #define HTML_PREFIX "<!DOCTYPE html>\n<html>\n    <head>\n        <meta charset=\"utf-8\"/>\n    </head>\n    <body>\n        <!-- three.js scripts -->\n        <!-- startup three.js -->\n        <script src=\"jsmodules/three.min.js\"></script>\n        <script src=\"jsmodules/three.module.js\"></script>\n        <script src=\"jsmodules/gif.js\"></script>\n        <!-- load models and look at them-->\n        <script src=\"jsmodules/OBJLoader.js\"></script>\n        <script src=\"jsmodules/MTLLoader.js\"></script>\n        <!-- postprocessing -->\n        <script src=\"jsmodules/CopyShader.js\"></script>\n        <script src=\"jsmodules/Pass.js\"></script>\n        <script src=\"jsmodules/ShaderPass.js\"></script>\n        <script src=\"jsmodules/MaskPass.js\"></script>\n        <script src=\"jsmodules/EffectComposer.js\"></script>\n        <script src=\"jsmodules/RenderPass.js\"></script>\n        <script src=\"jsmodules/DigitalGlitch.js\"></script>\n        <script src=\"jsmodules/GlitchPass.js\"></script>\n\n        <!--Other outside libraries -->\n        <script type=\"text/javascript\" src=\"jsmodules/jquery-3.5.1.min.js\"></script>\n        <script type=\"text/javascript\" src=\"jsmodules/dat.gui.min.js\"></script>\n        <script type=\"text/javascript\" src=\"jsmodules/gl-matrix-min.js\"></script>\n\n        <!-- Our code -->\n        <script type=\"text/javascript\" src=\"cameras3d.js\"></script>\n        <script type=\"text/javascript\" src=\"scenecanvas.js\"></script>\n\n\n";
 
+#define HTML_END "<table cellpadding>\n    <tr>\n        <td>\n            <h3>Controls</h3>\n            <ul>\n                <li><b>Mouse</b>: Click and drag to look around</li>\n                <li><b>W:</b> Forward</li>\n                <li><b>S:</b> Backwards</li>\n                <li><b>A:</b> Left</li>\n                <li><b>D:</b> Right</li>\n                <li><b>E:</b> Up</li>\n                <li><b>C:</b> Down</li>\n            </ul>\n        </td>\n    </tr>\n</table>\n    </body>\n</html>";
+
 class Scene3D {
     private:
         stringstream sceneCode;
@@ -335,7 +337,8 @@ class Scene3D {
             out << "<script>\n";
             out << sceneCode.str();
             out << "canvas.name = \"" << sceneName << "\";\n";
-            out << "canvas.repaint();\n</script>\n    </body>\n</html>";
+            out << "canvas.repaint();\n</script>";
+            out << HTML_END;
             out.close();
         }
 };
